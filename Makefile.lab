@@ -1,6 +1,7 @@
 # **DO NOT MODIFY**
 
 export COURSE := OS2021
+export TOKEN := L7JyUzHc
 URL := 'http://jyywiki.cn'
 
 submit:
