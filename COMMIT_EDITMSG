@@ -1,0 +1,10 @@
+   Static hostname: buffy-VirtualBox
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: f3296ccb69194cea87160774ac0bd297
+           Boot ID: 97bcf48166ab42baa2a11458dbd74555
+    Virtualization: oracle
+  Operating System: Ubuntu 20.04.2 LTS
+            Kernel: Linux 5.8.0-48-generic
+      Architecture: x86-64
+ 00:30:43 up  1:47,  1 user,  load average: 0.49, 0.31, 0.16
