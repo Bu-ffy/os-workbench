@@ -111,6 +111,7 @@ int main(int argc, char *argv[])
 {
   readfile();
   //命令行参数选择
+  //试一下
   for (int i = 0; i < argc; i++)
   {
     assert(argv[i]);
