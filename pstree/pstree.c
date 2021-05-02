@@ -2,20 +2,25 @@
 #include <assert.h>
 #include <dirent.h>
 
-typedef struct pro_info
+typedef struct info
 {
   int pid;
   int ppid;
   char name[100];
   int flag; //标志是否打印
   int rec;  //计算总父进程个数
+  int root;//标记根
 } info;
 
 char dir[1024], str[1024];
 struct dirent **namelist;
 int total;
 char pid_path[20], str[100], name[100];
-info proc[1024];
+info *proc;
+
+//控制参数
+int arg_n = 0;
+int arg_p = 0;
 
 //select the number file
 int filter(const struct dirent *dir)
@@ -30,34 +35,72 @@ int filter(const struct dirent *dir)
   }
 }
 
-int option(char argv)
+//得到pid
+int my_getpid(char *str)
 {
-  if (argv == "-p" || argv == "--show-pids")
-    pstree_p();
-  else if (argv == "-V" || argv == "version")
+  int length = strlen(str);
+    char num[10];
+    int i, j, ret;
+    if (strncmp(str, "Pid", 3) == 0)
+    {
+        for (i = 0; i < length; i++)
+        {
+            if (str[i] >= '0' && str[i] <= '9')
+                break;
+        } //获得str[i]中第一个数字位的i值
+        for (j = 0; j < length - 1; j++)
+            num[j] = str[i + j]; //将数字位复制于num
+        ret = atoi(num);         //atoi函数将string类型转换为int类型
+    }
+    else
+        ret = -1; //由于init的父进程为0 为了避免重复 我们返回－1
+    return ret;   //返回pid的值
+}
+
+//my_getppid()函数原理同my_getpid()原理
+int my_getppid(char *str)
+{
+  int len = strlen(str);
+  char num[10];
+  int i, j, ret;
+  if (strncmp(str, "PPid ", 4) == 0)
   {
-    /* code */
+    //printf("%s",str);
+    for (i = 0; i < len; i++)
+    {
+      if (str[i] >= '0' && str[i] <= '9')
+        break;
+    }
+    //printf("len=%d,i=%d/n",len,i);
+    for (j = 0; j < len - i; j++)
+    {
+      num[j] = str[i + j];
+    }
+    ret = atoi(num);
+    //printf("ret=%d/n",ret);
   }
-  else if (argv == "n" || argv == "--numeric-sort")
-  {
-    /* code */
-  }
+  else
+    ret = -1;
+  return ret; //返回ppid的值
 }
 
 //复制未学习！！！
 int readfile()
 {
-  int ppid, pid, s1, s2, j,k;
+  int ppid, pid, s1, s2, j, k, total;
   int t = 0;
   FILE *fp;
-  
+
   total = scandir("./proc", &namelist, filter, alphasort); //extract number file
+  assert(total);
+
   for (int i = 0; i < total; i++)
   {
     strcpy(pid_path, "/proc/");
     strcat(pid_path, namelist[i]->d_name);
     strcat(pid_path, "/status");
     fp = fopen(pid_path, "r");
+    assert(fp);
 
     while (!feof(fp)) //feof()函数读取文件，如果文件到达结尾,就返回非0值
     {
@@ -79,7 +122,8 @@ int readfile()
         }
         name[k - j - 1] = '/0';
       }
-      //将得到的赋值于struct
+      //将得到的赋值于proc
+      proc = (info *)malloc(sizeof(info) * (total + 1));
       proc[t].pid = pid;
       proc[t].ppid = ppid;
       strcpy(proc[t].name, name);
@@ -91,15 +135,7 @@ int readfile()
   return proc;
 }
 
-int get_pid()
-{
-}
-
 int pstree_n()
-{
-}
-
-int pstree_v()
 {
 }
 
@@ -109,23 +145,51 @@ int pstree_p()
 
 int main(int argc, char *argv[])
 {
-  readfile();
   //命令行参数选择
-  //试一下
-  for (int i = 0; i < argc; i++)
+  int i;
+  for (i = 0; i < argc; i++)
   {
-    assert(argv[i]);
-    if (argv[0] == "./pstree-32")
+    if (argv[i][0] == '-')
     {
-      option(argv[1]);
+      if (argv[i][1] == '-')
+      {
+        if (strcmp(argv[i], "--numeric-sort") == 0)
+        {
+          arg_n = 1;
+        }
+        else if (strcmp(argv[i], "--show-pids") == 0)
+        {
+          arg_p = 1;
+        }
+        else if (strcmp(argv[i], "--version") == 0)
+        {
+          printf("pstree for OSLab M1\n");
+          return 0;
+        }
+      }
+      else
+      {
+        for (int j = 1; j < strlen(argv[i]); j++)
+        {
+          if (argv[i][j] == 'n')
+          {
+            arg_n = 1;
+          }
+          else if (argv[i][j] == 'p')
+          {
+            arg_p = 1;
+          }
+          else if (argv[i][j] == 'V')
+          {
+            printf("pstree for OSLab M1\n");
+            return 0;
+          }
+        }
+      }
     }
-    else if (argv[0] == "./pstree-64")
-    {
-      /* code */
-    }
-    else
-      return printf("error");
   }
   assert(!argv[argc]);
-  
+  readfile();
+
+  free(proc);
 }
